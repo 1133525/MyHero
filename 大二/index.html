@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My hero</title>
+    <link rel="stylesheet" href="style.css">
+    
+</head>
+
+<body>
+    <div class="language-switch">
+        <button class="btn language-btn" id="langToggleBtn" >Language<br>English</button>
+    </div>
+
+    <div class="container">
+        
+        <div class="title">My Hero</div>
+        <div class="menu-buttons">
+            
+             <button class="btn menu-btn lang-zh" onclick="window.location.href='tutorial.html'">教學</button>
+             <button class="btn menu-btn lang-en" onclick="window.location.href='tutorial.html'">Tutorial</button>
+            <button class="btn menu-btn lang-zh" onclick="startGame()">Start</button>
+            <button class="btn menu-btn lang-en" onclick="startGame()">Start</button>
+            <button class="btn menu-btn lang-zh" onclick="loadGame()">讀檔</button>
+            <button class="btn menu-btn lang-en" onclick="loadGame()">Load</button>
+        </div>
+        </div>
+
+<script>
+    function startGame(){
+        localStorage.setItem('currentStory','s1');
+        localStorage.removeItem('currentChoice');
+        localStorage.removeItem('currentTyping');
+        window.location.href='story.html';
+    }
+   
+    function loadGame() {
+        const page = localStorage.getItem('savePage');
+        if (!page) {
+            startGame();
+            return;
+        }
+
+        if (page === 'story') {
+            window.location.href = 'story.html';
+        } else if (page === 'choice') {
+            window.location.href = 'choice.html';
+        } else if (page === 'typing') {
+            window.location.href = 'typing.html';
+        } else {
+            startGame();
+        }
+}
+
+    const LANG_KEY='gameLang';
+    let currentLang=localStorage.getItem(LANG_KEY)||'en';
+    const langBtn=document.getElementById('langToggleBtn');
+    function updateLangButtonText(){
+        if(currentLang==='zh'){
+            langBtn.innerHTML='Language<br>中文';
+        }else{
+           
+            langBtn.innerHTML='Language<br>English';
+        }
+    }
+   
+    function updateLangButtonDisplay(){
+        const zhBlocks=document.querySelectorAll('.lang-zh');
+        const enBlocks=document.querySelectorAll('.lang-en');
+        if(currentLang==='zh'){
+            zhBlocks.forEach(el=>el.style.display='block');
+            enBlocks.forEach(el=>el.style.display='none');
+        }else{
+            zhBlocks.forEach(el=>el.style.display='none');
+            enBlocks.forEach(el=>el.style.display='block');
+        }}
+        updateLangButtonText();
+        updateLangButtonDisplay();
+    langBtn.addEventListener('click',function(){
+        currentLang=(currentLang==='zh')?'en':'zh';
+        localStorage.setItem(LANG_KEY,currentLang);
+        updateLangButtonText();
+        updateLangButtonDisplay();
+    });
+</script>
+
+
+
+</body>
+</html>
