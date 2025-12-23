@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My hero</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="typing-page">
+        <div class="time-box">
+            <span id="timeLabel">Time limit</span>: <span id="timeValue">60</span>s
+    </div>
+    <div class="typing-title" id="typingTitle"></div>
+    <div class="typing-target" id="targetText"></div>
+       
+    <div class="typing-box" id ="typingBox">
+        <div class="typing-hint" id="typingHint"></div>
+        <textarea id="typingInput" class="typing-input"></textarea>
+    </div>
+    <div id="typingStatus" class="typing-status"></div>
+    <button id="nextBtn" class="btn story-next-btn"
+    style="display:none;">Next</button>
+</div>
+<script>
+    localStorage.setItem('savePage', 'typing');
+
+    const typingDB={
+        t1:{
+            zhTitle:'前往王都(教學關卡:請在時間內打出框內的文字)',
+            enTitle:'Go to the Royal Capital.(Tutorial Stage: Please type the text within the frame within the time limit)',
+            zhText:'回到家裡，我拿了一些裝備就準備馬不停蹄的趕往王都',
+            enText:'Heading back home, I grabbed some gear and prepared to head to the royal capital without stopping.',
+            timeLimit:0,
+            successNext:{type:'story',storyId:'s3'},
+            failStoryId:'eb1'
+        },
+        t2:{
+             zhTitle:'出發',
+            enTitle:'Departure',
+            zhText:'傳說古堡裡有前幾任國王封印的黑魔法石，據說威力非常強大，但也因此容易使人陷入慾望而無法自拔',
+            enText:'The ancient castle is said to contain a black magic stone sealed by previous kings. It is said to be extremely powerful, but also easily leads people into desire and makes it hard to break free.',
+            timeLimit:150,
+            successNext:{type:'story',storyId:'s6'},
+            failStoryId:'eb1'
+        },
+        t3_1:{
+             zhTitle:'從側門進去',
+            enTitle:'Enter through the side door.',
+            zhText:'門很重，我們花了一些力氣把它推開，進到古堡裡',
+            enText:'The door was heavy, and we had to use some effort to push it open and enter the ancient castle.',
+            timeLimit:40,
+            successNext:{type:'story',storyId:'s9'},
+            failStoryId:'eb1'
+        },
+        t3_2:{
+             zhTitle:'從正門進去',
+            enTitle:'Enter through the front door.',
+            zhText:'門很重，一大開門就傳來股味道',
+            enText:'The door was heavy, and as we opened it, a smell wafted out.',
+            timeLimit:30,
+            successNext:{type:'story',storyId:'s8'},
+            failStoryId:'eb1'
+        },
+        t4_1:{
+             zhTitle:'從走廊走到大廳',
+            enTitle: 'Walk through the corridor to the hall',
+            zhText:'走廊上有很多房間，我們每個都檢查了一下，但並沒有特別的東西',
+            enText:'There are many rooms in the corridor. We checked each one, but there was nothing special',
+
+            timeLimit:40,
+             successNext:{type:'story',storyId:'s10'},
+            failStoryId:'eb2'
+        },
+        t5:{
+             zhTitle:'前往地下室',
+            enTitle:'Go to the basement',
+            zhText:'一打開地下室的門就傳來一股濃烈的血腥味和屍臭味，有種不祥的預感',
+            enText:  'A powerful stench of blood and rotting corpses wafts out the moment the basement door is opened, bringing with it an ominous premonition.',
+
+   timeLimit:40,
+            successNext:{type:'story',storyId:'s11'},
+            failStoryId:'eb2'
+        },
+
+        t6:{
+             zhTitle:'前往二樓',
+            enTitle:'Head to the second floor',
+            zhText:'我們整頓好裝備，拿好武器，準備出發，龍和公主都在二樓',
+            enText:'We readied our gear, gripped our weapons, and prepared to set off. Both the dragon and the princess are on the second floor.',
+            timeLimit:30,
+            successNext:{type:'story',storyId:'s13'},
+            failStoryId:'eb2'
+        },
+        t7:{
+             zhTitle:'直接撤退放棄公主',
+            enTitle:'Retreat immediately and abandon the Princess',
+            zhText:'沒辦法，現在這個情況下自身難保，只能回去通知國王再想想辦法了',
+            enText:'There’s no other way. Under these circumstances, we can barely protect ourselves. We have to go back and inform the King, then think of another plan.',
+            timeLimit:30,
+             successNext:{type:'story',storyId:'s17'},
+            failStoryId:'eb2'
+        },
+
+t8:{
+             zhTitle:'回到二樓討伐惡龍',
+            enTitle:'Return to the second floor to fight the dragon',
+            zhText:'我和伊萊到了地下室在屍堆裡拿了一些武器和防具備著，討論了一下戰術，準備開始討伐惡龍了',
+            enText:'Eli and I went to the basement and gathered some weapons and armor from among the piles of corpses to gear up. After discussing our tactics, we prepared to begin the subjugation of the dragon',
+            timeLimit:40,
+            successNext:{type:'story',storyId:'s18'},
+            failStoryId:'eb2'
+        },
+        t9:{
+             zhTitle:'前往二樓開始作戰',
+            enTitle:'Go to the second floor and begin the operation',
+            zhText:'我們緊握著武器一步一步慢慢的走上樓梯，其實還是很緊張很害怕，但我們還是必須前進',
+            enText:'We gripped our weapons tightly and walked up the stairs step by step, slowly. Actually, we were still very nervous and afraid, but we still had to move forward',
+
+            timeLimit:40,
+            successNext:{type:'story',storyId:'s19'},
+            failStoryId:'eb2'
+        },
+        t10:{
+             zhTitle:'閃避攻擊',
+            enTitle:'Dodge',
+            zhText:'抓準時機......跳起來！',
+            enText:'Grasp the timing...... jump!',
+            timeLimit:20,
+            successNext:{type:'choice', targetId:'choice17'},
+            failStoryId:'eb2'
+        },
+        t11:{
+             zhTitle:'攻擊龍的翅膀',
+            enTitle:'Attack the dragon\'s wings',
+
+            zhText:'加速一口氣踩上龍的背，然後跳起來把劍刺向龍',
+            enText:'Speed up, step onto the dragon\'s back in one breath, and then jump up to stab the sword into the dragon',
+            timeLimit:25,
+            successNext:{type:'story', storyId:'s20'},
+            failStoryId:'eb2'},
+            t11_2:{
+             zhTitle:'攻擊龍的背',
+            enTitle:'Attack the dragon\'s back',
+            zhText:'加速一口氣衝向龍，然後用盡全力把劍刺向龍',
+            enText:'Speed up and rush toward the dragon in one breath, then use all your strength to stab the sword into the dragon',
+
+            timeLimit:25,
+            successNext:{type:'choice', targetId:'choice18'},
+            failStoryId:'eb2'
+        },
+           
+t12:{
+             zhTitle:'閃避',
+            enTitle:'Dodge',
+            zhText:'向後撤退，躲避攻擊',
+            enText:'Retreat backward to evade the attack',
+            timeLimit:20,
+            successNext:{type:'story', storyId:'s21'},
+failStoryId:'eb2'
+        },
+
+
+
+t11_3:{
+             zhTitle:'攻擊龍的翅膀',
+            enTitle: 'Attack the wings',
+            zhText:'快速踏上龍的被刺穿另一個翅膀',
+            enText:'Quickly step onto the dragon\'s back and pierce the other wing',
+            timeLimit:20,
+            successNext:{type:'choice', targetId:'choice20'},
+            failStoryId:'eb2'
+            
+
+        },
+        t13:{
+             zhTitle:'攻擊龍的腹部',
+            enTitle:'Attack the dragon\'s abdomen',
+            zhText:'把劍架好，全力朝龍衝刺',
+            enText:'Set the sword and sprint toward the dragon with all your strength',
+            timeLimit:20,
+            successNext:{type:'story', storyId:'s22'},
+            failStoryId:'eb2'
+        },
+        t14:{
+             zhTitle:'報仇',
+            enTitle:'Revenge',
+            zhText:'殺死龍',
+            enText:'Kill the dragon',
+            timeLimit:15,
+            successNext:{type:'choice', targetId:'choice24'},
+            failStoryId:'eb3'
+        },
+        
+t15:{
+             zhTitle:'攻擊',
+            enTitle: 'Attack',
+            zhText:'把劍再次刺進他的腹部',
+            enText:'Stab the sword into its abdomen again',
+            timeLimit:20,
+            successNext:{type:'choice', targetId:'choice25'},
+            failStoryId:'eb3'
+        },
+        t16:{
+             zhTitle:'擊攻擊攻擊攻擊攻擊攻擊攻擊攻擊攻擊攻擊攻擊攻擊攻擊攻擊攻擊攻擊攻擊攻',
+            enTitle:'Attack Attack Attack Attack Attack Attack Attack Attack',
+            zhText:'殺了它殺了它殺了它殺了它殺了它殺了它殺了它',
+            enText:'Kill it Kill it Kill it Kill it Kill it Kill it Kill it Kill it ',
+            timeLimit:30,
+            successNext:{type:'story',storyId:'s26'},
+
+            failStoryId:'eb3'
+        },
+        t17:{
+             zhTitle:'攻擊龍，前往二樓',
+            enTitle:'Attack the dragon and head to the second floor',
+            zhText:'抓準時機，再次把劍對準龍',
+            enText:'Taking advantage of the moment, I aimed my sword at the dragon once again.',
+            timeLimit:20,
+            successNext:{type:'story',storyId:'s27'},
+
+            failStoryId:'eb3'
+        },
+        t18:{
+             zhTitle:'殺死龍',
+            enTitle:'Kill the dragon',
+            zhText: '瞄準，跳下去，殺死龍',
+            enText:'Aim, jump, and kill the dragon',
+            timeLimit:10,
+            successNext:{type:'story',storyId:'s28'},
+
+            failStoryId:'eb3'
+        },
+        t19:{
+             zhTitle:'以最快速度前往古堡',
+            enTitle:'Head to the old manor at the fastest speed',
+            zhText:'我必須比誰都更快前往古堡，搶在任何人的前面，這次王都遇見的少女，伊恩，傑克，伊萊誰都不能死',
+            enText:'I must head to the old manor faster than anyone, getting ahead of everyone, this time the girl I met in the Royal Capital, Ian, Jack, Eli, none of them can die',
+            timeLimit:150,
+            successNext:{type:'story',storyId:'s36'},
+            failStoryId:'eb1'
+        },
+        t20:{
+             zhTitle:'下令',
+            enTitle:'Issue the order',
+            zhText:'\“雷諾 • 佛雷徳 停下\”',
+            enText:   '\“Reno Fred, stop\”' ,
+            timeLimit:15,
+            successNext:{type:'story',storyId:'s37'},
+            failStoryId:'eb4'
+        },
+        t21:{
+             zhTitle:'下令',
+            enTitle:'Issue the order',
+
+            zhText:'\“雷諾 • 佛雷徳 停下\”',
+            enText:   '\“Reno Fred, stop\”' ,
+            timeLimit:15,
+            successNext:{type:'story',storyId:'s38'},
+            failStoryId:'eb4'
+        },
+        t22:{
+             zhTitle:'下令',
+             enTitle:'Issue the order',
+
+            zhText:'\“雷諾 • 佛雷徳 停下\”',
+            enText:   '\“Reno Fred, stop\”' ,
+            timeLimit:15,
+            successNext:{type:'story',storyId:'s40'},
+            failStoryId:'eb4'
+        },
+
+        t23:{
+             zhTitle:'下令',
+             enTitle:'Issue the order',
+
+            zhText:'\“雷諾 • 佛雷徳 停下\”',
+            enText:   '\“Reno Fred, stop\”' ,
+            timeLimit:15,
+            successNext:{type:'choice',targetId:'choice31'},
+            failStoryId:'eb4'
+        },
+        t24:{
+             zhTitle:'下令',
+            enTitle:'Issue the order',
+
+            zhText:'\“雷諾 • 佛雷徳 發出龍嘯\”',
+            enText:'',
+            timeLimit:15,
+            successNext:{type:'choice',targetId:'choice32'},
+            failStoryId:'eb4'
+        },
+        t25:{
+             zhTitle:'結束一切',
+            enTitle:'End everything',
+            zhText:'刺穿公主和書',
+            enText:'I pierced through the Princess and the book',
+            timeLimit:15,
+            successNext:{type:'story',storyId:'s41'},
+            failStoryId:'eb4'
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+    };
+    const msg={
+        zh:{
+            timeLabel:'時間限制',
+            success:'成功！',
+            fail:'失敗。'
+        },
+        en:{
+            timeLabel:'Time Limit',
+            success:'Success! ',
+            fail:'Fail!'
+        }
+    }
+    const currentLang=localStorage.getItem('gameLang')||'en';
+    const typingId=localStorage.getItem('currentTyping')||'t1';
+    const data=typingDB[typingId];
+    const typingTitleEl=document.getElementById('typingTitle');
+    
+   
+    
+    const timeLabelEl=document.getElementById('timeLabel');
+    const timeValueEl=document.getElementById('timeValue');
+    const targetTextEl=document.getElementById('targetText');
+    const typingInput=document.getElementById('typingInput');
+    const statusEl=document.getElementById('typingStatus');
+    const nextBtn=document.getElementById('nextBtn');
+    const typingBox=document.querySelector('.typing-box');
+    const typingHint=document.getElementById('typingHint');
+    
+    if(!data){
+        targetTextEl.textContent='Typing data not found.';
+        typingInput.disabled=true;
+    }
+     const langMsg=(currentLang==='zh')?msg.zh:msg.en;
+     const titleText=(currentLang==='zh')?data.zhTitle:data.enTitle;
+    const targetText=(currentLang==='zh')?data.zhText:data.enText;
+
+    let timeLeft=(typeof data.timeLimit==='number')?data.timeLimit:60;
+    let lastValue='';
+    let finished=false;
+    let timeId=null;
+    let isComposing=false;
+
+    timeLabelEl.textContent=langMsg.timeLabel;
+    timeValueEl.textContent=data.timeLimit;
+    typingHint.textContent=targetText;
+    
+    targetTextEl.textContent=titleText;
+    typingInput.value='';
+    
+    
+
+    function startTimer(){
+        if(timeLeft<=0){
+            timeValueEl.textContent='∞';
+            return;
+        }
+    timeValueEl.textContent=timeLeft;    
+        timeId=setInterval(()=>{
+            if(finished)return;
+            timeLeft--;
+            timeValueEl.textContent=timeLeft;
+            
+            if(timeLeft<=0){
+                handleFail();
+            }
+        },1000);
+    }
+    function goNext(cfg){
+        if(!cfg)return;
+        if(cfg.type==='choice'){
+            const choiceId=cfg.id||cfg.choiceId||cfg.targetId;
+            localStorage.setItem('currentChoice',choiceId);
+            window.location.href='choice.html';
+    }else if(cfg.type==='story'){
+            const storyId=cfg.id||cfg.storyId;
+            localStorage.setItem('currentStory',storyId);
+            window.location.href='story.html';
+        }
+    }
+    function handleSuccess(){
+        if(finished)return;
+        finished=true;
+        clearInterval(timeId);
+        statusEl.textContent=langMsg.success;
+        statusEl.style.color='green';
+        typingInput.disabled=true;
+        typingBox.classList.remove('error');
+        
+        nextBtn.style.display='inline-flex';
+    
+        nextBtn.onclick=()=>
+            goNext(data.successNext);
+
+        };
+
+       
+    function handleFail(){
+        if(finished)return;
+        finished=true;
+        clearInterval(timeId);
+        statusEl.textContent=langMsg.fail;
+        statusEl.style.color='red';
+        typingInput.disabled=true;
+        typingInput.classList.add('error');
+        localStorage.setItem('currentStory',data.failStoryId);
+        nextBtn.style.display='inline-flex';
+        
+
+        
+    }
+   
+    function handleTyping(rawValue){
+        
+        if(finished)  return;
+            let value=rawValue.replace(/\r?\n/g,'');
+            if(targetText.startsWith(value)){
+                lastValue=value;
+                typingBox.classList.remove('error');
+                typingInput.classList.remove('error');
+            }else{
+                
+                typingInput.value=lastValue;
+                typingBox.classList.add('error');
+                typingInput.classList.add('error');}
+                if(lastValue===targetText){
+                    handleSuccess();}
+        }
+       
+        typingInput.addEventListener('compositionstart',()=>{
+            isComposing=true;
+        });
+        typingInput.addEventListener('compositionend',(e)=>{
+            isComposing=false;
+            handleTyping(e.target.value);
+        });
+    typingInput.addEventListener('input',()=>{
+        if(isComposing)return;
+        handleTyping(typingInput.value);
+    });
+    typingInput.addEventListener('keydown',(e)=>{
+        if(e.key==='Enter'){
+            e.preventDefault();
+        }
+    });
+    nextBtn.addEventListener('click',()=>{
+       
+        window.location.href='story.html';
+    });
+    startTimer();
+
+
+</script>
+</body>
+
+</html>
